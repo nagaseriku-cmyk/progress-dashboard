@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>プロジェクト進捗ダッシュボード｜ジャパンマテックス様 × Dooox</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top"><div class="wrap" style="padding-bottom:0">
+  <div class="kick">PROJECT DASHBOARD</div>
+  <h1 id="proj-title">プロジェクト進捗ダッシュボード</h1>
+  <div class="sub" id="proj-sub"></div>
+  <span class="note" id="proj-note"></span>
+</div></header>
+
+<div class="wrap">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>全体進捗</h2>
+        <div class="phasebar" id="phasebar"></div>
+        <div class="muted" id="proj-progress-note" style="margin-top:8px"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>3テーマの進捗</h2>
+        <div id="themes"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>タスク・ToDo</h2>
+        <table id="tasks"><thead><tr><th>タスク</th><th>担当</th><th>期日</th><th>状態</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>ミーティング時系列</h2>
+        <div class="tl" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card feed">
+    <h2>議事録・文字起こしを反映</h2>
+    <div class="muted" style="margin-bottom:8px">議事録の本文（日付・TODO・決定事項など）を貼り付けて「ダッシュボードに反映」を押すと、時系列とタスクに自動で追加されます（簡易ロジック）。本番では LLM / API 連携に差し替え可能です。</div>
+    <textarea id="ta" placeholder="例：&#10;2026/06/22 社長打合せ&#10;・着手施策を入金管理マスターに決定&#10;・TODO（Dooox）：入金管理マスターのPoC設計（期日：6/30）&#10;・TODO（JM）：販管CSVと入金条件表のサンプル共有（期日：6/27）"></textarea>
+    <div>
+      <button id="btn-reflect">ダッシュボードに反映</button>
+      <button class="ghost" id="btn-sample">サンプルを入れる</button>
+    </div>
+  </div>
+  <div class="muted" id="foot" style="margin-top:14px;text-align:center"></div>
+</div>
+<div class="toast" id="toast">反映しました</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

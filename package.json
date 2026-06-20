@@ -1,0 +1,15 @@
+{
+  "name": "progress-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ジャパンマテックス様 × Dooox 経理効率化プロジェクト 進捗ダッシュボード",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "npx serve ."
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
