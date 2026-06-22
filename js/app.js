@@ -228,8 +228,10 @@
       "あなたは経理効率化プロジェクトの議事録を要約するアシスタントです。次の議事録を読み、JSONで返してください。" +
       "date=開催日(YYYY/MM/DD形式。本文から抽出し、無ければ空文字)、" +
       "title=この打ち合わせの主題(全角20字程度)、" +
-      "overview=打ち合わせの概要を2〜3文で要約(全角120字以内)、" +
-      "highlights=重要な決定事項・論点・TODOを3〜4個の簡潔な箇条書き。" +
+      "overview=打ち合わせの概要を2〜3文で要約(全角140字以内)、" +
+      "highlights=重要な決定事項・論点を3〜4個の簡潔な箇条書き、" +
+      "tasks=今後のToDo/宿題の配列。各要素は {name:タスク内容(簡潔・名詞句), who:'JM'(ジャパンマテックス)か'DX'(Dooox)か'BOTH', due:期日や時期(無ければ'—'), done:完了済みならtrue}。" +
+      "見出し・説明文・所感はタスクにしない。" +
       "すべて日本語。\n\n=== 議事録 ===\n" + text;
     const body = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -242,9 +244,22 @@
             date: { type: "string" },
             title: { type: "string" },
             overview: { type: "string" },
-            highlights: { type: "array", items: { type: "string" } }
+            highlights: { type: "array", items: { type: "string" } },
+            tasks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  who: { type: "string" },
+                  due: { type: "string" },
+                  done: { type: "boolean" }
+                },
+                required: ["name", "who", "due", "done"]
+              }
+            }
           },
-          required: ["date", "title", "overview", "highlights"]
+          required: ["date", "title", "overview", "highlights", "tasks"]
         }
       }
     };
@@ -275,17 +290,19 @@
 
     const newTasks = [];
     lines.forEach((l) => {
-      if (/TODO|ToDo/i.test(l)) {
-        let who = "BOTH";
-        if (/Dooox|ＤＸ|DX/i.test(l)) who = "DX";
-        else if (/JM|ジャパン|先方|太田|カーター/i.test(l)) who = "JM";
-        const due = (l.match(/期日[：:]\s?([0-9\/]+)/) || [])[1] || "—";
-        const nm = l.replace(/^[・\-\*]\s*/, "")
-          .replace(/TODO[（(].*?[)）][：:]?/i, "")
-          .replace(/[（(]期日[：:].*?[)）]/, "")
-          .replace(/TODO[：:]/i, "").trim();
-        newTasks.push([nm || "新規タスク", who, due, "p-go"]);
-      }
+      if (!/TODO|ToDo/i.test(l)) return;
+      if (/^TODO\s*リスト$/i.test(l.replace(/\s/g, ""))) return; // 見出し行は除外
+      if (l.length > 60) return;                                  // 文章はタスクにしない
+      let who = "BOTH";
+      if (/Dooox|ＤＸ|DX/i.test(l)) who = "DX";
+      else if (/JM|ジャパン|先方|太田|カーター/i.test(l)) who = "JM";
+      const due = (l.match(/期日[：:]\s?([0-9\/]+)/) || [])[1] || "—";
+      const nm = l.replace(/^[・\-\*]\s*/, "")
+        .replace(/TODO[（(].*?[)）][：:]?/i, "")
+        .replace(/[（(]期日[：:].*?[)）]/, "")
+        .replace(/TODO[：:]/i, "").trim();
+      if (!nm || nm === "リスト") return;
+      newTasks.push([nm, who, due, "p-go"]);
     });
     const bullets = lines.filter((l) => /^[・\-\*]/.test(l)).map((l) => l.replace(/^[・\-\*]\s*/, ""));
     // 番号付き見出し（「1. xxx」等）から概要を組み立て
@@ -316,9 +333,8 @@
     btn.disabled = true;
     btn.textContent = (window.GEMINI && window.GEMINI.apiKey) ? "AIで要約中…" : "反映中…";
     try {
-      // タスク（担当・期日）は簡易ロジックで抽出
       const parsed = parseMinutes(text);
-      // 日付・主題・概要・要点は Gemini で要約（使えない/失敗時は parsed をフォールバック）
+      // 日付・主題・概要・要点・タスクは Gemini で抽出（使えない/失敗時は parsed をフォールバック）
       const ai = await summarizeWithGemini(text);
       const entry = ai ? {
         date: ai.date || parsed.entry.date,
@@ -329,14 +345,26 @@
         highlights: (ai.highlights && ai.highlights.length) ? ai.highlights.slice(0, 5) : parsed.entry.highlights
       } : parsed.entry;
 
-      parsed.tasks.forEach((t) => DATA.tasks.unshift(t));
+      // AI抽出タスク → [name, who, due, status]。無ければ簡易抽出にフォールバック
+      const aiTasks = (ai && Array.isArray(ai.tasks)) ? ai.tasks.map((t) => {
+        const who = (t.who === "JM" || t.who === "DX" || t.who === "BOTH") ? t.who : "BOTH";
+        const nm = String(t.name || "").trim().slice(0, 60);
+        return [nm, who, String(t.due || "—").trim() || "—", t.done ? "p-done" : "p-go"];
+      }).filter((t) => t[0]) : null;
+      const tasksToAdd = (aiTasks && aiTasks.length) ? aiTasks : parsed.tasks;
+
+      // 既存と同名のタスクは重複追加しない
+      const seen = new Set(DATA.tasks.map((t) => t[0]));
+      let added = 0;
+      tasksToAdd.forEach((t) => { if (!seen.has(t[0])) { DATA.tasks.unshift(t); seen.add(t[0]); added++; } });
+
       DATA.timeline.unshift(entry);
       if (DATA.kpis[0]) DATA.kpis[0].value = DATA.timeline.length; // ミーティング実施回数
       await persistAndRender();
 
       const how = ai ? "AIが要約" : "簡易要約";
       const shared = Store.status() === "firebase" ? "／全員に共有" : "／この端末に保存";
-      toast(`反映しました（${how}・タスク${parsed.tasks.length}件${shared}）`);
+      toast(`反映しました（${how}・タスク${added}件追加${shared}）`);
       $("ta").value = "";
     } catch (e) {
       console.warn(e);
