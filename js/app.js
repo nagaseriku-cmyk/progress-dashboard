@@ -94,7 +94,8 @@
   function renderHeader() {
     $("proj-title").textContent = DATA.project.title;
     $("proj-sub").textContent = DATA.project.subtitle;
-    $("proj-note").textContent = DATA.project.note;
+    const noteEl = $("proj-note");
+    if (noteEl) noteEl.textContent = DATA.project.note || "";
     $("proj-progress-note").innerHTML = DATA.progressNote || "";
     $("next-mtg").textContent = DATA.nextMeeting || "";
     $("foot").textContent = DATA.project.footer;
