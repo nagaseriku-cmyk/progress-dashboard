@@ -66,6 +66,7 @@ button.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy);ma
 .recent-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
 .recent-date{font-size:12px;font-weight:800;color:#fff;background:var(--gold);border-radius:6px;padding:2px 9px;}
 .recent-title{font-size:15px;font-weight:800;color:var(--navy);}
+.recent-overview{margin:0 0 10px;font-size:13px;line-height:1.75;color:var(--ink);background:var(--ice);border-radius:8px;padding:10px 12px;}
 .recent-pts{margin:0 0 12px;padding-left:20px;}
 .recent-pts li{font-size:13px;line-height:1.7;color:var(--ink);margin-bottom:4px;}
 button.sm{padding:7px 14px;font-size:12.5px;margin-top:0;}

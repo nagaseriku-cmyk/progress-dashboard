@@ -127,11 +127,13 @@
     const t = DATA.timeline && DATA.timeline[0];
     if (!t) { $("recent").innerHTML = '<div class="muted">データがありません</div>'; return; }
     const pts = deriveHighlights(t);
+    const overview = t.overview || t.summary || "";
     $("recent").innerHTML =
       `<div class="recent-head">
          <span class="recent-date">${esc(t.date)}</span>
          <span class="recent-title">${esc(t.title)}</span>
        </div>
+       ${overview ? `<p class="recent-overview">${esc(overview)}</p>` : ""}
        <ul class="recent-pts">${pts.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
        <button class="ghost sm" id="recent-full">この回の議事録 全文を見る ›</button>`;
     $("recent-full").addEventListener("click", () => openModal(0));
@@ -187,7 +189,56 @@
     document.body.style.overflow = "";
   }
 
-  /* ================= 議事録パース（簡易） ================= */
+  /* ================= 議事録の要約（Gemini / フォールバック） =================
+   * window.GEMINI.apiKey があれば Gemini で「日付・主題・概要・要点」を抽出。
+   * 使えない/失敗時は parseMinutes の簡易ロジックにフォールバック。
+   */
+  async function summarizeWithGemini(text) {
+    const cfg = window.GEMINI || {};
+    if (!cfg.apiKey) return null;
+    const model = cfg.model || "gemini-2.5-flash";
+    const prompt =
+      "あなたは経理効率化プロジェクトの議事録を要約するアシスタントです。次の議事録を読み、JSONで返してください。" +
+      "date=開催日(YYYY/MM/DD形式。本文から抽出し、無ければ空文字)、" +
+      "title=この打ち合わせの主題(全角20字程度)、" +
+      "overview=打ち合わせの概要を2〜3文で要約(全角120字以内)、" +
+      "highlights=重要な決定事項・論点・TODOを3〜4個の簡潔な箇条書き。" +
+      "すべて日本語。\n\n=== 議事録 ===\n" + text;
+    const body = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            date: { type: "string" },
+            title: { type: "string" },
+            overview: { type: "string" },
+            highlights: { type: "array", items: { type: "string" } }
+          },
+          required: ["date", "title", "overview", "highlights"]
+        }
+      }
+    };
+    try {
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+        model + ":generateContent?key=" + encodeURIComponent(cfg.apiKey);
+      const res = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+      });
+      if (!res.ok) { console.warn("Gemini HTTP", res.status); return null; }
+      const data = await res.json();
+      const txt = data && data.candidates && data.candidates[0] &&
+        data.candidates[0].content && data.candidates[0].content.parts &&
+        data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+      if (!txt) return null;
+      const out = JSON.parse(txt);
+      return (out && (out.overview || out.title)) ? out : null;
+    } catch (e) { console.warn("Gemini error", e); return null; }
+  }
+
+  /* ================= 議事録パース（簡易・フォールバック） ================= */
   function parseMinutes(text) {
     const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
     const dateM = text.match(/20\d\d[\/\.\-]\s?\d{1,2}[\/\.\-]\s?\d{1,2}/);
@@ -210,9 +261,16 @@
       }
     });
     const bullets = lines.filter((l) => /^[・\-\*]/.test(l)).map((l) => l.replace(/^[・\-\*]\s*/, ""));
-    const summary = bullets.slice(0, 3).join("／") || head.slice(0, 40);
+    // 番号付き見出し（「1. xxx」等）から概要を組み立て
+    const sections = lines
+      .filter((l) => /^[0-9０-９]+[\.．、]/.test(l))
+      .map((l) => l.replace(/^[0-9０-９]+[\.．、]\s*/, "").slice(0, 24));
+    const overview = sections.length
+      ? sections.slice(0, 4).join("、") + "について確認。"
+      : (bullets.slice(0, 2).join("／") || head.slice(0, 60));
+    const summary = bullets.slice(0, 3).join("／") || overview;
     return {
-      entry: { date, title: head.slice(0, 30), summary, full: text, highlights: bullets.slice(0, 4) },
+      entry: { date, title: head.slice(0, 30), overview, summary, full: text, highlights: bullets.slice(0, 4) },
       tasks: newTasks
     };
   }
@@ -226,14 +284,40 @@
   async function reflect() {
     const text = $("ta").value.trim();
     if (!text) { toast("議事録を入力してください"); return; }
-    const r = parseMinutes(text);
-    r.tasks.forEach((t) => DATA.tasks.unshift(t));
-    DATA.timeline.unshift(r.entry);
-    if (DATA.kpis[0]) DATA.kpis[0].value = DATA.timeline.length; // ミーティング実施回数
-    await persistAndRender();
-    const shared = Store.status() === "firebase" ? "／全員に共有" : "／この端末に保存";
-    toast(`反映しました（タスク${r.tasks.length}件・議事録1件を追加${shared}）`);
-    $("ta").value = "";
+    const btn = $("btn-reflect");
+    const origLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = (window.GEMINI && window.GEMINI.apiKey) ? "AIで要約中…" : "反映中…";
+    try {
+      // タスク（担当・期日）は簡易ロジックで抽出
+      const parsed = parseMinutes(text);
+      // 日付・主題・概要・要点は Gemini で要約（使えない/失敗時は parsed をフォールバック）
+      const ai = await summarizeWithGemini(text);
+      const entry = ai ? {
+        date: ai.date || parsed.entry.date,
+        title: ai.title || parsed.entry.title,
+        overview: ai.overview || parsed.entry.overview || "",
+        summary: ai.overview || parsed.entry.summary,
+        full: text,
+        highlights: (ai.highlights && ai.highlights.length) ? ai.highlights.slice(0, 5) : parsed.entry.highlights
+      } : parsed.entry;
+
+      parsed.tasks.forEach((t) => DATA.tasks.unshift(t));
+      DATA.timeline.unshift(entry);
+      if (DATA.kpis[0]) DATA.kpis[0].value = DATA.timeline.length; // ミーティング実施回数
+      await persistAndRender();
+
+      const how = ai ? "AIが要約" : "簡易要約";
+      const shared = Store.status() === "firebase" ? "／全員に共有" : "／この端末に保存";
+      toast(`反映しました（${how}・タスク${parsed.tasks.length}件${shared}）`);
+      $("ta").value = "";
+    } catch (e) {
+      console.warn(e);
+      toast("反映に失敗しました");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = origLabel;
+    }
   }
 
   function sample() {
