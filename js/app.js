@@ -138,8 +138,7 @@
             <div class="rm-desc">${esc(m.desc || "")}</div>
           </div>`;
         }).join("")}
-      </div>
-      ${rm.goalNote ? `<div class="rm-goal">🏁 ${esc(rm.goalNote)}</div>` : ""}`;
+      </div>`;
   }
 
   function deriveHighlights(t) {
