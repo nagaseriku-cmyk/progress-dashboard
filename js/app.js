@@ -18,26 +18,42 @@
   const whoLbl = { JM: "JM", DX: "Dooox", BOTH: "JM×Dooox" };
   const statusLbl = { "p-done": "完了", "p-live": "完成", "p-go": "対応中", "p-run": "進行中" };
 
-  /* ================= データ層（共有 / フォールバック） ================= */
+  /* ================= データ層（Firebase / Firestore ＋ フォールバック） =================
+   * データ全体を JSON 文字列の1フィールド(json)として保存します。
+   * （Firestore は「配列の中の配列」を保存できないため＝tasks が該当。文字列化で回避）
+   */
   const Store = (function () {
-    const cfg = window.SUPABASE_CONFIG || {};
+    const cfg = window.FIREBASE_CONFIG || {};
+    const docCfg = window.DASHBOARD_DOC || { collection: "dashboard", id: "japanmatex-dooox" };
     const LS_KEY = "jm-dooox-dashboard";
-    let client = null;
+    let docRef = null;
     let mode = "local";
-    if (cfg.url && cfg.anonKey && window.supabase) {
-      try { client = window.supabase.createClient(cfg.url, cfg.anonKey); mode = "supabase"; }
-      catch (e) { console.warn("Supabase init failed:", e); mode = "local"; }
+
+    if (cfg.projectId && cfg.apiKey && window.firebase) {
+      try {
+        firebase.initializeApp(cfg);
+        docRef = firebase.firestore().collection(docCfg.collection).doc(docCfg.id);
+        mode = "firebase";
+      } catch (e) { console.warn("Firebase init failed → local:", e); mode = "local"; }
+    }
+
+    function unpack(snap) {
+      if (snap && snap.exists) {
+        const d = snap.data();
+        if (d && d.json) { try { return JSON.parse(d.json); } catch (e) { /* ignore */ } }
+      }
+      return null;
     }
 
     async function load() {
-      if (mode === "supabase") {
+      if (mode === "firebase") {
         try {
-          const { data, error } = await client.from(cfg.table).select("data").eq("id", cfg.rowId).maybeSingle();
-          if (error) throw error;
-          if (data && data.data) return data.data;
-          await client.from(cfg.table).upsert({ id: cfg.rowId, data: window.DEFAULT_DATA });
+          const snap = await docRef.get();
+          const got = unpack(snap);
+          if (got) return got;
+          await docRef.set({ json: JSON.stringify(window.DEFAULT_DATA), updatedAt: Date.now() });
           return clone(window.DEFAULT_DATA);
-        } catch (e) { console.warn("Supabase load failed → local:", e); mode = "local"; }
+        } catch (e) { console.warn("Firestore load failed → local:", e); mode = "local"; }
       }
       const raw = localStorage.getItem(LS_KEY);
       if (raw) { try { return JSON.parse(raw); } catch (e) { /* ignore */ } }
@@ -45,26 +61,23 @@
     }
 
     async function save(data) {
-      if (mode === "supabase") {
+      if (mode === "firebase") {
         try {
-          const { error } = await client.from(cfg.table)
-            .upsert({ id: cfg.rowId, data: data, updated_at: new Date().toISOString() });
-          if (error) throw error;
+          await docRef.set({ json: JSON.stringify(data), updatedAt: Date.now() });
           return true;
-        } catch (e) { console.warn("Supabase save failed → local:", e); mode = "local"; }
+        } catch (e) { console.warn("Firestore save failed → local:", e); mode = "local"; }
       }
       try { localStorage.setItem(LS_KEY, JSON.stringify(data)); return true; }
       catch (e) { console.warn(e); return false; }
     }
 
     function subscribe(cb) {
-      if (mode !== "supabase") return;
+      if (mode !== "firebase") return;
       try {
-        client.channel("dash-" + cfg.rowId)
-          .on("postgres_changes",
-            { event: "*", schema: "public", table: cfg.table, filter: "id=eq." + cfg.rowId },
-            (payload) => { if (payload.new && payload.new.data) cb(payload.new.data); })
-          .subscribe();
+        docRef.onSnapshot(
+          (snap) => { const got = unpack(snap); if (got) cb(got); },
+          (err) => console.warn("onSnapshot error:", err)
+        );
       } catch (e) { console.warn("subscribe failed:", e); }
     }
 
@@ -74,7 +87,7 @@
   /* ================= 描画 ================= */
   function renderSync() {
     const s = $("sync");
-    if (Store.status() === "supabase") { s.textContent = "🟢 全員に同期中"; s.className = "sync ok"; }
+    if (Store.status() === "firebase") { s.textContent = "🟢 全員に同期中"; s.className = "sync ok"; }
     else { s.textContent = "🟡 この端末のみ（共有未設定）"; s.className = "sync warn"; }
   }
 
@@ -217,7 +230,7 @@
     DATA.timeline.unshift(r.entry);
     if (DATA.kpis[0]) DATA.kpis[0].value = DATA.timeline.length; // ミーティング実施回数
     await persistAndRender();
-    const shared = Store.status() === "supabase" ? "／全員に共有" : "／この端末に保存";
+    const shared = Store.status() === "firebase" ? "／全員に共有" : "／この端末に保存";
     toast(`反映しました（タスク${r.tasks.length}件・議事録1件を追加${shared}）`);
     $("ta").value = "";
   }

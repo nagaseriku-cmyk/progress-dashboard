@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// 進捗ダッシュボードの共有データ用ルール
+// 方針：ログイン不要・URL共有のみ（noindex の社内向け運用）。
+//      共有ドキュメント1点だけ読み書きを許可し、他は一切禁止。
+// 将来 Dooox 限定などに締める場合は、Firebase Auth を入れて
+//      `allow read, write: if request.auth != null && request.auth.token.email in [...]`
+//      のように変更します（SETUP_FIREBASE.md 参照）。
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /dashboard/{docId} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
