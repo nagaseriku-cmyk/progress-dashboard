@@ -13,6 +13,7 @@
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   let DATA = clone(window.DEFAULT_DATA);
+  let ready = false; // 共有データの読込完了フラグ（読込前の保存＝古いデータ上書きを防ぐ）
 
   const whoCls = { JM: "w-jm", DX: "w-dx", BOTH: "w-both" };
   const whoLbl = { JM: "JM", DX: "Dooox", BOTH: "JM×Dooox" };
@@ -166,14 +167,39 @@
     $("recent-full").addEventListener("click", () => openModal(0));
   }
 
+  const STATUS_OPTS = ["p-run", "p-go", "p-done", "p-live"];
+
   function renderTasks() {
-    $("tasks").querySelector("tbody").innerHTML = DATA.tasks.map((t) =>
+    $("tasks").querySelector("tbody").innerHTML = DATA.tasks.map((t, i) =>
       `<tr>
         <td>${esc(t[0])}</td>
         <td class="c"><span class="who ${whoCls[t[1]] || ""}">${esc(whoLbl[t[1]] || t[1])}</span></td>
-        <td class="c">${esc(t[2])}</td>
-        <td class="c"><span class="pill ${esc(t[3])}">${esc(statusLbl[t[3]] || "進行中")}</span></td>
+        <td class="c"><input class="td-due" data-i="${i}" value="${esc(t[2])}" aria-label="期日（編集可）"></td>
+        <td class="c"><select class="td-status" data-i="${i}" data-st="${esc(t[3])}" aria-label="状態（編集可）">
+          ${STATUS_OPTS.map((o) => `<option value="${o}" ${o === t[3] ? "selected" : ""}>${statusLbl[o]}</option>`).join("")}
+        </select></td>
       </tr>`).join("");
+
+    $("tasks").querySelectorAll(".td-due").forEach((inp) => {
+      inp.addEventListener("change", async () => {
+        const i = +inp.dataset.i;
+        if (!ready) { renderTasks(); return; } // 読込前は保存しない
+        if (!DATA.tasks[i]) return;
+        DATA.tasks[i][2] = inp.value.trim() || "—";
+        await persistAndRender();
+        toast("期日を更新しました" + (Store.status() === "firebase" ? "（全員に共有）" : ""));
+      });
+    });
+    $("tasks").querySelectorAll(".td-status").forEach((sel) => {
+      sel.addEventListener("change", async () => {
+        const i = +sel.dataset.i;
+        if (!ready) { renderTasks(); return; } // 読込前は保存しない
+        if (!DATA.tasks[i]) return;
+        DATA.tasks[i][3] = sel.value;
+        await persistAndRender();
+        toast("状態を更新しました" + (Store.status() === "firebase" ? "（全員に共有）" : ""));
+      });
+    });
   }
 
   function renderTimeline() {
@@ -397,6 +423,7 @@
     renderSync();
     renderAll();              // まず DEFAULT_DATA で即描画
     DATA = await Store.load(); // 保存済みデータで上書き
+    ready = true;             // 以降の編集・保存を許可
     renderSync();             // load 中に mode が変わる場合あり
     renderAll();
 

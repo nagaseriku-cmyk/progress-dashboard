@@ -37,6 +37,19 @@ th,td{border-bottom:1px solid var(--line);padding:8px 8px;text-align:left;}
 th{color:var(--grey);font-size:11.5px;font-weight:700;}
 td.c{text-align:center}
 .who{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10.5px;font-weight:700;}
+/* 編集可能なToDo（期日・状態） */
+.td-due{width:88px;font-family:inherit;font-size:12px;text-align:center;border:1px solid var(--line);border-radius:6px;padding:3px 4px;background:#fff;color:var(--ink);}
+.td-due:hover{border-color:#b9c2d6;}
+.td-due:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(62,92,154,.18);}
+.td-status{appearance:none;-webkit-appearance:none;border:1px solid transparent;cursor:pointer;font-weight:700;font-size:11px;padding:3px 22px 3px 10px;border-radius:11px;font-family:inherit;color:var(--ink);
+  background-repeat:no-repeat;background-position:right 7px center;background-size:8px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='8'%20height='8'%3E%3Cpath%20d='M0%202l4%204%204-4'%20fill='none'%20stroke='%23667085'%20stroke-width='1.5'/%3E%3C/svg%3E");}
+.td-status[data-st="p-done"]{background-color:#DEF2E6;color:#1f6b3a;}
+.td-status[data-st="p-run"]{background-color:#E4E9F5;color:#33417e;}
+.td-status[data-st="p-go"]{background-color:#FCEFD2;color:#8a6400;}
+.td-status[data-st="p-live"]{background-color:#E7E0F3;color:#5b3e86;}
+.td-status:hover{filter:brightness(.97);}
+.td-status:focus{outline:none;box-shadow:0 0 0 2px rgba(62,92,154,.25);}
 .w-jm{background:#E4E9F5;color:#33417e;}.w-dx{background:#E7EFE0;color:#3b6d11;}.w-both{background:#FCEFD2;color:#8a6400;}
 .tl{max-height:280px;overflow:auto;}
 .tl .row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
