@@ -10,6 +10,7 @@ header.top{background:var(--navy);color:#fff;padding:18px 0 16px;border-bottom:5
 h1{font-size:23px;margin:3px 0 4px;}
 .sub{color:#CADCFC;font-size:13px;}
 .note{display:inline-block;background:#FCEFD2;color:#8a6400;border:1px solid var(--gold);border-radius:6px;font-size:12px;font-weight:700;padding:3px 10px;margin-top:12px;}
+.note:empty{display:none;}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px;}
 .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-left:6px solid var(--navy);box-shadow:0 2px 8px rgba(20,24,45,.05);}
 .kpi.green{border-left-color:var(--green);}.kpi.gold{border-left-color:var(--gold);}.kpi.blue{border-left-color:var(--blue);}
