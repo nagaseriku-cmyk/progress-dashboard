@@ -109,9 +109,37 @@
       </div>`).join("");
   }
 
-  function renderPhases() {
-    $("phasebar").innerHTML = DATA.phases.map((p) =>
-      `<div class="${esc(p.state)}" style="width:${p.pct}%">${esc(p.label)}</div>`).join("");
+  function renderRoadmap() {
+    const el = $("roadmap");
+    if (!el) return;
+    const rm = (DATA && DATA.roadmap) || (window.DEFAULT_DATA && window.DEFAULT_DATA.roadmap);
+    if (!rm || !rm.milestones || !rm.milestones.length) { el.innerHTML = ""; return; }
+    const ms = rm.milestones;
+    const n = ms.length;
+    const nowIdx = ms.findIndex((m) => m.state === "now");
+    const doneCount = ms.filter((m) => m.state === "done").length;
+    const fillIdx = nowIdx >= 0 ? nowIdx : (doneCount - 1);
+    const fillPct = n > 1 ? Math.max(0, Math.min(100, ((fillIdx + 0.5) / n) * 100)) : 100;
+    const stateLbl = { done: "完了", now: "進行中", next: "予定", goal: "目標" };
+    const icon = { done: "✓", now: "●", next: "", goal: "🏁" };
+    const range = $("rm-range");
+    if (range) range.textContent = rm.period || "";
+    el.innerHTML =
+      `<div class="rm-track" style="--fill:${fillPct}%">
+        ${ms.map((m) => {
+          const st = m.state || "next";
+          const here = st === "now" ? `<span class="rm-here">今ここ</span>` : "";
+          return `<div class="rm-step ${esc(st)}">
+            ${here}
+            <div class="rm-dot">${icon[st] || ""}</div>
+            <div class="rm-label">${esc(m.label)}</div>
+            <div class="rm-period">${esc(m.period || "")}</div>
+            <div class="rm-state">${esc(stateLbl[st] || "")}</div>
+            <div class="rm-desc">${esc(m.desc || "")}</div>
+          </div>`;
+        }).join("")}
+      </div>
+      ${rm.goalNote ? `<div class="rm-goal">🏁 ${esc(rm.goalNote)}</div>` : ""}`;
   }
 
   function deriveHighlights(t) {
@@ -169,7 +197,7 @@
   }
 
   function renderAll() {
-    renderHeader(); renderKpis(); renderPhases(); renderRecent(); renderTasks(); renderTimeline();
+    renderHeader(); renderKpis(); renderRoadmap(); renderRecent(); renderTasks(); renderTimeline();
   }
 
   /* ================= 全文モーダル ================= */

@@ -61,6 +61,43 @@ button.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy);ma
 /* 次回ミーティング */
 .nextmtg{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--navy);background:var(--ice);border-left:4px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 12px;}
 
+/* ロードマップ */
+.rm-headline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:22px;}
+.rm-range{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;}
+.rm-track{display:flex;gap:8px;position:relative;}
+.rm-track::before{content:"";position:absolute;left:0;right:0;top:14px;height:4px;background:var(--line);border-radius:2px;z-index:0;}
+.rm-track::after{content:"";position:absolute;left:0;top:14px;height:4px;width:var(--fill,0%);background:var(--green);border-radius:2px;z-index:0;transition:width .4s;}
+.rm-step{flex:1;position:relative;z-index:1;text-align:center;}
+.rm-dot{width:30px;height:30px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#AAB2C5;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);}
+.rm-step.done .rm-dot{background:var(--green);}
+.rm-step.now .rm-dot{background:var(--gold);box-shadow:0 0 0 4px #FCEFD2;}
+.rm-step.next .rm-dot{background:#fff;color:#AAB2C5;border-color:#cfd5e3;box-shadow:0 0 0 1px var(--line);}
+.rm-step.goal .rm-dot{background:var(--navy);}
+.rm-label{font-size:13px;font-weight:800;color:var(--ink);line-height:1.3;}
+.rm-period{font-size:11px;color:var(--grey);font-weight:700;margin-top:2px;}
+.rm-state{display:inline-block;margin-top:5px;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px;background:#EEF1F7;color:var(--grey);}
+.rm-step.done .rm-state{background:#DEF2E6;color:#1f6b3a;}
+.rm-step.now .rm-state{background:#FCEFD2;color:#8a6400;}
+.rm-step.goal .rm-state{background:#E7E9F5;color:var(--navy);}
+.rm-desc{font-size:11px;color:var(--grey);line-height:1.5;margin-top:6px;padding:0 4px;}
+.rm-here{position:absolute;top:-19px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10.5px;font-weight:800;color:#fff;background:var(--gold);padding:1px 8px;border-radius:10px;}
+.rm-here::after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--gold);}
+.rm-goal{margin-top:18px;font-size:12.5px;font-weight:700;color:var(--navy);background:#EEF1F7;border:1px dashed var(--navy);border-radius:8px;padding:9px 12px;text-align:center;}
+@media(max-width:680px){
+  .rm-track{flex-direction:column;gap:10px;}
+  .rm-track::before,.rm-track::after{display:none;}
+  .rm-step{text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border-left:3px solid var(--line);padding:8px 0 8px 12px;}
+  .rm-step.done{border-left-color:var(--green);}
+  .rm-step.now{border-left-color:var(--gold);}
+  .rm-step.goal{border-left-color:var(--navy);}
+  .rm-dot{margin:0;}
+  .rm-label{flex:1;}
+  .rm-period,.rm-state{margin-top:0;}
+  .rm-desc{flex-basis:100%;margin-top:2px;padding:0;}
+  .rm-here{position:static;transform:none;}
+  .rm-here::after{display:none;}
+}
+
 /* 直近の動き（詳細カード） */
 .card.recent{border-top:4px solid var(--gold);}
 .recent-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;}

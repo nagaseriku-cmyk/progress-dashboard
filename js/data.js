@@ -39,23 +39,36 @@ window.DEFAULT_DATA = {
       "accent": "green"
     }
   ],
-  "phases": [
-    {
-      "label": "Phase1 現状把握・可視化（完了）",
-      "pct": 45,
-      "state": "done"
-    },
-    {
-      "label": "Phase2 着手施策の決定",
-      "pct": 20,
-      "state": "now"
-    },
-    {
-      "label": "実行・展開",
-      "pct": 35,
-      "state": "todo"
-    }
-  ],
+  "roadmap": {
+    "period": "2026年4月 〜 9月末（一旦の区切り）",
+    "goalNote": "9月末：本格運用・定着でプロジェクトを一旦区切り",
+    "milestones": [
+      {
+        "label": "現状把握・可視化",
+        "period": "4〜6月",
+        "state": "done",
+        "desc": "全11回のヒアリングで3領域（入金・支払・資金繰り）の業務フロー／工数を可視化"
+      },
+      {
+        "label": "着手施策の決定",
+        "period": "6月",
+        "state": "now",
+        "desc": "6/22 社長打合せで着手施策を決定（入金・支払の自動化／資金繰り表の運用改善）"
+      },
+      {
+        "label": "PoC・テスト運用",
+        "period": "7〜8月",
+        "state": "next",
+        "desc": "選定施策のPoC構築と試験運用（楽楽精算テスト〜7月末）"
+      },
+      {
+        "label": "本格運用・定着",
+        "period": "8〜9月末",
+        "state": "goal",
+        "desc": "全社へ展開し定着。9月末で一旦のプロジェクト区切り"
+      }
+    ]
+  },
   "progressNote": "Phase1（現状把握・業務フロー/工数の可視化）が完了。<b>2026/06/22 の社長打合せで着手施策を決定</b>し、Phase2（実行）へ移行します。",
   "nextMeeting": "次回：2026/06/22 社長打合せ（Dooox訪問・着手施策の決定／カーター様同席）",
   "tasks": [
