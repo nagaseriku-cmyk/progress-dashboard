@@ -16,10 +16,15 @@
     <!-- 注記は非表示運用（空＝CSSで display:none）。要素は旧キャッシュ互換のため残す -->
     <span class="note" id="proj-note"></span>
     <span class="sync" id="sync" title="共有状態">同期状態を確認中…</span>
+    <nav class="topnav" role="tablist" aria-label="ページ切替">
+      <button class="topnav-btn active" id="nav-dashboard" role="tab" aria-selected="true">ダッシュボード</button>
+      <button class="topnav-btn" id="nav-inkin" role="tab" aria-selected="false">入金管理</button>
+    </nav>
   </div>
 </div></header>
 
 <div class="wrap">
+ <div id="view-dashboard">
   <div class="kpis" id="kpis"></div>
 
   <!-- 全体進捗・ロードマップ -->
@@ -43,8 +48,21 @@
 
       <!-- タスク -->
       <div class="card" style="margin-top:16px">
-        <h2>タスク・ToDo <span class="muted" style="font-weight:400">（期日・状態はその場で編集できます）</span></h2>
-        <table id="tasks"><thead><tr><th>タスク</th><th>担当</th><th>期日</th><th>状態</th></tr></thead><tbody></tbody></table>
+        <div class="task-head">
+          <h2 style="margin:0">タスク・ToDo</h2>
+          <div class="tabs" role="tablist">
+            <button class="tab active" id="tab-active" role="tab" aria-selected="true">進行中タスク</button>
+            <button class="tab" id="tab-log" role="tab" aria-selected="false">行動タスクログ</button>
+          </div>
+        </div>
+        <div id="pane-active">
+          <div class="muted" style="margin:6px 0 8px">完了していないタスクだけを表示しています（タスク名・期日・状態はその場で編集／× で削除）。完了したタスクは「行動タスクログ」で確認できます。</div>
+          <table id="tasks"><thead><tr><th>タスク</th><th>担当</th><th>期日</th><th>状態</th><th></th></tr></thead><tbody></tbody></table>
+        </div>
+        <div id="pane-log" hidden>
+          <div class="muted" style="margin:6px 0 10px">これまでの全議事録から抽出した、プロジェクトで取り組んできたタスクの記録です（打ち合わせの回ごと・新しい順）。</div>
+          <div id="tasklog"></div>
+        </div>
       </div>
     </div>
 
@@ -68,6 +86,28 @@
     </div>
   </div>
   <div class="muted" id="foot" style="margin-top:14px;text-align:center"></div>
+ </div><!-- /view-dashboard -->
+
+ <div id="view-inkin" hidden>
+   <div class="card" style="margin-top:20px">
+     <div class="rm-headline">
+       <h2 style="margin:0">入金管理 段階効率化</h2>
+       <span class="rm-range">Step1〜6</span>
+     </div>
+     <div class="muted" id="inkin-sub" style="margin:2px 0 16px"></div>
+     <!-- 1. 全体のロードマップ -->
+     <div class="inkin-sec-h">全体ロードマップ</div>
+     <div id="inkin-roadmap"></div>
+     <!-- 2&3. 具体的なステータス＋内容の詳細 -->
+     <div class="inkin-sec-h" style="margin-top:22px">ステータス・詳細</div>
+     <div id="inkin"></div>
+   </div>
+   <!-- 関連タスク（議事録から反映） -->
+   <div class="card" style="margin-top:16px">
+     <div class="inkin-sec-h">入金管理に関連するタスク <span class="muted" style="font-weight:400">（議事録から反映）</span></div>
+     <div id="inkin-tasks"></div>
+   </div>
+ </div><!-- /view-inkin -->
 </div>
 
 <!-- 議事録 全文モーダル -->

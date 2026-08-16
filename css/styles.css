@@ -37,7 +37,10 @@ th,td{border-bottom:1px solid var(--line);padding:8px 8px;text-align:left;}
 th{color:var(--grey);font-size:11.5px;font-weight:700;}
 td.c{text-align:center}
 .who{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10.5px;font-weight:700;}
-/* 編集可能なToDo（期日・状態） */
+/* 編集可能なToDo（タスク名・期日・状態） */
+.td-name{cursor:text;border-radius:6px;outline:none;transition:background .12s;}
+.td-name:hover{background:#f4f6fb;}
+.td-name:focus{background:#fff;box-shadow:0 0 0 2px rgba(62,92,154,.18);}
 .td-due{width:88px;font-family:inherit;font-size:12px;text-align:center;border:1px solid var(--line);border-radius:6px;padding:3px 4px;background:#fff;color:var(--ink);}
 .td-due:hover{border-color:#b9c2d6;}
 .td-due:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(62,92,154,.18);}
@@ -50,7 +53,65 @@ td.c{text-align:center}
 .td-status[data-st="p-live"]{background-color:#E7E0F3;color:#5b3e86;}
 .td-status:hover{filter:brightness(.97);}
 .td-status:focus{outline:none;box-shadow:0 0 0 2px rgba(62,92,154,.25);}
+.td-del{margin-top:0;width:22px;height:22px;padding:0;line-height:1;border-radius:6px;background:#fff;color:#b42318;border:1px solid var(--line);font-size:14px;font-weight:700;cursor:pointer;}
+.td-del:hover{background:#FBEAE8;border-color:#e6b3ad;color:#911c12;}
+.td-del:focus{outline:none;box-shadow:0 0 0 2px rgba(180,35,24,.22);}
 .w-jm{background:#E4E9F5;color:#33417e;}.w-dx{background:#E7EFE0;color:#3b6d11;}.w-both{background:#FCEFD2;color:#8a6400;}
+/* タスクのタブ */
+.task-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.tabs{display:inline-flex;gap:4px;background:#eef1f7;border-radius:10px;padding:3px;}
+.tab{margin-top:0;background:transparent;color:var(--grey);border:none;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.tab:hover{background:#e3e8f2;color:var(--ink);}
+.tab.active{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(20,30,60,.12);}
+/* 行動タスクログ */
+.log-summary{font-size:11.5px;color:var(--grey);font-weight:700;margin-bottom:10px;}
+#tasklog{max-height:420px;overflow:auto;}
+.log-group{margin-bottom:14px;}
+.log-ghead{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1.5px solid var(--line);margin-bottom:6px;flex-wrap:wrap;}
+.log-gdate{font-weight:800;font-size:12.5px;color:var(--navy);}
+.log-gtitle{font-size:11.5px;color:var(--grey);}
+.log-row{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px dashed var(--line);flex-wrap:wrap;}
+.log-name{flex:1;min-width:160px;font-size:12.5px;color:var(--ink);}
+.log-due{font-size:11px;color:var(--grey);white-space:nowrap;}
+.log-st{display:inline-block;padding:2px 9px;border-radius:11px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+.log-st[data-st="p-done"]{background:#DEF2E6;color:#1f6b3a;}
+.log-st[data-st="p-run"]{background:#E4E9F5;color:#33417e;}
+.log-st[data-st="p-go"]{background:#FCEFD2;color:#8a6400;}
+.log-st[data-st="p-live"]{background:#E7E0F3;color:#5b3e86;}
+/* 入金管理 段階効率化ロードマップ */
+.inkin-sec-h{font-size:12.5px;font-weight:800;color:var(--navy);padding-bottom:8px;margin-bottom:10px;border-bottom:2px solid var(--line);}
+.inkin-title{font-size:14px;font-weight:800;color:var(--navy);}
+.inkin-sub{font-size:11.5px;margin-top:2px;}
+.inkin-now{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 14px;padding:9px 12px;background:#eef1f7;border-radius:10px;font-size:12.5px;}
+.inkin-now-l{font-size:10.5px;font-weight:800;color:#fff;background:var(--navy);border-radius:6px;padding:2px 8px;}
+.inkin-now b{color:var(--ink);}
+.inkin-counts{margin-left:auto;font-size:11px;color:var(--grey);font-weight:700;white-space:nowrap;}
+.inkin-steps{position:relative;}
+.inkin-step{display:flex;gap:12px;padding:0 0 14px;}
+.inkin-step .is-rail{position:relative;flex:0 0 56px;display:flex;justify-content:center;}
+.inkin-step .is-rail::before{content:"";position:absolute;top:24px;bottom:-6px;width:2px;background:var(--line);}
+.inkin-step:last-child .is-rail::before{display:none;}
+.is-no{position:relative;z-index:1;height:24px;min-width:46px;padding:0 6px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:#eef1f7;color:var(--grey);border:1.5px solid var(--line);}
+.inkin-step .is-main{flex:1;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;}
+.is-top{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+.is-name{font-size:13px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.is-here{font-size:10px;font-weight:800;color:#8a6400;background:#FCEFD2;border-radius:6px;padding:1px 7px;}
+.is-scope{margin-top:6px;font-size:12px;font-weight:700;color:var(--navy);}
+.is-detail{margin-top:4px;font-size:12px;color:#46506a;line-height:1.6;}
+.is-master{margin-top:6px;font-size:10.5px;color:var(--grey);}
+.is-status{appearance:none;-webkit-appearance:none;border:1px solid transparent;cursor:pointer;font-weight:700;font-size:11px;padding:3px 22px 3px 10px;border-radius:11px;font-family:inherit;color:var(--ink);
+  background-repeat:no-repeat;background-position:right 7px center;background-size:8px;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='8'%20height='8'%3E%3Cpath%20d='M0%202l4%204%204-4'%20fill='none'%20stroke='%23667085'%20stroke-width='1.5'/%3E%3C/svg%3E");}
+.is-status:focus{outline:none;box-shadow:0 0 0 2px rgba(62,92,154,.25);}
+/* 状態カラー（カード左帯・Step丸・ステータス） */
+.st-done .is-main{border-left-color:#3b9a5d;background:#f5fbf7;}
+.st-done .is-no{background:#DEF2E6;color:#1f6b3a;border-color:#b7e0c6;}
+.st-done .is-status{background-color:#DEF2E6;color:#1f6b3a;}
+.st-doing .is-main{border-left-color:var(--blue);background:#f6f8fd;}
+.st-doing .is-no{background:#E4E9F5;color:#33417e;border-color:#bcc8e6;}
+.st-doing .is-status{background-color:#E4E9F5;color:#33417e;}
+.st-todo .is-status{background-color:#eef1f7;color:#667085;}
+.inkin-note{margin-top:14px;padding:10px 12px;background:#FFF9EC;border:1px solid #F0DFB0;border-radius:8px;font-size:11.5px;color:#6b5518;line-height:1.6;}
 .tl{max-height:280px;overflow:auto;}
 .tl .row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);}
 .tl .dt{font-size:11.5px;color:var(--gold);font-weight:700;white-space:nowrap;min-width:78px;}
@@ -70,6 +131,11 @@ button.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy);ma
 .sync{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;}
 .sync.ok{background:#DEF2E6;color:#1f6b3a;border:1px solid #9ed3b3;}
 .sync.warn{background:#FCEFD2;color:#8a6400;border:1px solid var(--gold);}
+/* トップページ切替ナビ（ヘッダー内・同期バッジの右） */
+.topnav{display:inline-flex;gap:4px;margin-left:auto;background:rgba(255,255,255,.12);border-radius:10px;padding:3px;}
+.topnav-btn{margin-top:0;background:transparent;color:#CADCFC;border:none;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.topnav-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.topnav-btn.active{background:#fff;color:var(--navy);}
 
 /* 次回ミーティング */
 .nextmtg{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--navy);background:var(--ice);border-left:4px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 12px;}
